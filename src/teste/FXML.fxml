@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import javafx.scene.Group?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #bcbcbc;" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="teste.FXMLController">
+    <center>
+        <ScrollPane prefHeight="417.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+            <content>
+                <Group fx:id="group">
+                    <children>
+                        <ImageView fx:id="imageView" fitHeight="332.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true" />
+                    </children>
+                </Group>
+            </content>
+        </ScrollPane>
+    </center>
+    <top>
+        <AnchorPane prefHeight="119.0" prefWidth="800.0">
+            <children>
+                <JFXButton fx:id="buttonSelectImage" layoutX="14.0" layoutY="14.0" prefHeight="35.0" prefWidth="501.0" style="-fx-background-color: #2787b0;" text="Selecionar Imagem" textFill="WHITE" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="285.0">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font></JFXButton>
+                <JFXButton fx:id="buttonSelectCow" layoutX="14.0" layoutY="60.0" style="-fx-background-color: #414040;" text="Selecionar pasto" textFill="WHITE" AnchorPane.leftAnchor="15.0" AnchorPane.topAnchor="75.0">
+                    <graphic>
+                        <FontAwesomeIconView fill="WHITE" glyphName="CUT" size="2em" styleClass="icon" />
+                    </graphic>
+                </JFXButton>
+            <JFXButton fx:id="buttonSelectPasture" layoutX="174.0" layoutY="75.0" style="-fx-background-color: #414040;" text="Selecionar vaca" textFill="WHITE" AnchorPane.leftAnchor="174.0" AnchorPane.topAnchor="75.0">
+               <graphic>
+                  <FontAwesomeIconView fill="WHITE" glyphName="CUT" size="2em" styleClass="icon" />
+               </graphic>
+            </JFXButton>
+            <JFXButton fx:id="buttonSelectStart" layoutX="327.0" layoutY="74.0" style="-fx-background-color: #414040;" text="Iniciar" textFill="WHITE" AnchorPane.leftAnchor="327.0" AnchorPane.rightAnchor="285.0" AnchorPane.topAnchor="75.0">
+               <graphic>
+                  <FontAwesomeIconView fill="WHITE" glyphName="PLAY" size="2em" styleClass="icon" wrappingWidth="18.85714340209961" />
+               </graphic>
+            </JFXButton>
+            <ImageView fitHeight="62.0" fitWidth="272.0" layoutX="519.0" layoutY="29.0" pickOnBounds="true" preserveRatio="true" AnchorPane.rightAnchor="14.59375">
+               <image>
+                  <Image url="@logo_cowting.png" />
+               </image>
+            </ImageView>
+            </children>
+        </AnchorPane>
+    </top>
+   <bottom>
+      <AnchorPane prefHeight="60.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+         <children>
+            <StackPane alignment="BASELINE_LEFT" layoutX="603.0" prefHeight="17.0" prefWidth="197.0" AnchorPane.bottomAnchor="20.0" AnchorPane.rightAnchor="0.0" />
+            <StackPane layoutY="43.0" prefHeight="17.0" prefWidth="789.0" AnchorPane.bottomAnchor="4.2" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+               <children>
+                  <Text fill="#414040" strokeType="OUTSIDE" strokeWidth="0.0" text="  Selecione uma imagem" textAlignment="CENTER" wrappingWidth="799.0" StackPane.alignment="CENTER">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Text>
+               </children>
+            </StackPane>
+            <ImageView fitHeight="51.0" fitWidth="133.0" layoutX="8.0" layoutY="4.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="7.0">
+               <image>
+                  <Image url="@logo_CNPq.jpg" />
+               </image>
+            </ImageView>
+            <ImageView fitHeight="57.0" fitWidth="160.0" layoutX="141.0" layoutY="11.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="8.0">
+               <image>
+                  <Image url="@logo_morrinhos.png" />
+               </image>
+            </ImageView>
+         </children>
+      </AnchorPane>
+   </bottom>
+</BorderPane>
