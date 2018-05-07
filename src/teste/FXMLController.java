@@ -46,9 +46,6 @@ import javax.imageio.ImageIO;
  */
 public class FXMLController implements Initializable {
 
-    /**
-     * Initializes the controller class.
-     */
     @FXML
     private JFXButton buttonSelectImage;
 
@@ -74,7 +71,7 @@ public class FXMLController implements Initializable {
     private Map cow, otherCow, pasture;
     private Image image;
     private BufferedImage bufferedImage;
-    
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         buttonSelectImage.setOnAction((final ActionEvent e) -> {
@@ -100,11 +97,7 @@ public class FXMLController implements Initializable {
             BufferedImage crop = crop(selectionBounds);
             rubberBandSelection.removeRetangle();
             pasture = savePixelsInHashMap(crop);
-            try {
-                replacePixels(bufferedImage, otherCow);
-            } catch (IOException ex) {
-                Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
-            }
+
         });
         buttonSelectCow.setOnMouseClicked((event) -> {
             Bounds selectionBounds = rubberBandSelection.getBounds();
@@ -116,54 +109,51 @@ public class FXMLController implements Initializable {
             if (pasture == null || cow == null || pasture.size() == 1 || cow.size() == 1) {
                 return;
             }
-            pasture.forEach((t, u) -> {
-                if (cow.get(u) != null) {
-                    cow.remove(u);
-                }
-            });
+            
+            try {
+                replacePixels(bufferedImage);
+            } catch (IOException ex) {
+                Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
         });
 
     }
 
-    public BufferedImage replacePixels(BufferedImage crop, Map pixelsMap) throws IOException {
-        final int xmin = crop.getMinX();
-        final int ymin = crop.getMinY();
+    public BufferedImage replacePixels(BufferedImage crop) throws IOException {
 
-        final int ymax = ymin + crop.getHeight();
-        final int xmax = xmin + crop.getWidth();
+        int w = crop.getWidth();
+        int h = crop.getHeight();
+  
+        BufferedImage writableImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 
-        int width = (int) crop.getWidth();
-        int height = (int) crop.getHeight();
-
-        BufferedImage writableImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-        for (int i = xmin; i < xmax; i++) {
-            for (int j = ymin; j < ymax; j++) {
-                int pixel = crop.getRGB(i, j);
-
-                //  if(pixelsMap.get(pixel)==null);
-                writableImage.setRGB(i, j, pixel);
+         for (int col = 0; col < w; col++) {
+            for (int lin = 0; lin < h; lin++) {
+                int pixel = crop.getRGB(col, lin);
+                if (pasture.get(pixel) != null) {
+                    writableImage.setRGB(col, lin, -1);                 
+                }
+                else{
+                writableImage.setRGB(col, lin, pixel);
+                }
             }
         }
 
-        File outputfile = new File("image.jpg");
-        ImageIO.write(writableImage, "jpg", outputfile);
+        image = SwingFXUtils.toFXImage(writableImage, null);
+        imageView.setImage(image);
+        imageView.setFitWidth(image.getWidth());
+        imageView.setFitHeight(image.getHeight());
 
         return crop;
     }
 
     public Map<Integer, Integer> savePixelsInHashMap(BufferedImage crop) {
         Map<Integer, Integer> map = new HashMap<>();
-        final int xmin = crop.getMinX();
-        final int ymin = crop.getMinY();
-
-        final int ymax = ymin + crop.getHeight();
-        final int xmax = xmin + crop.getWidth();
-
-        for (int i = xmin; i < xmax; i++) {
-            for (int j = ymin; j < ymax; j++) {
-                int pixel = crop.getRGB(i, j);
+int w = crop.getWidth();
+        int h = crop.getHeight();
+          for (int col = 0; col < w; col++) {
+            for (int lin = 0; lin < h; lin++) {
+                int pixel = crop.getRGB(col, lin);
                 map.put(pixel, pixel);
             }
         }
