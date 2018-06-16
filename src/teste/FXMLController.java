@@ -8,8 +8,15 @@ package teste;
 import com.jfoenix.controls.JFXButton;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,8 +35,6 @@ import javafx.scene.Group;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelReader;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -68,7 +73,8 @@ public class FXMLController implements Initializable {
     private JFXButton buttonSelectStart;
 
     private RubberBandSelection rubberBandSelection;
-    private Map cow, otherCow, pasture;
+    private Map<Integer, Integer> cow = new HashMap<>();
+    private Map<Integer, Integer> pasture = new HashMap<>();
     private Image image;
     private BufferedImage bufferedImage;
 
@@ -76,7 +82,7 @@ public class FXMLController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         buttonSelectImage.setOnAction((final ActionEvent e) -> {
             FileChooser fileChooser = new FileChooser();
-            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("JPG", "*.jpg"), new FileChooser.ExtensionFilter("PNG", "*.png"));
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("JPG", "*.JPG"), new FileChooser.ExtensionFilter("PNG", "*.png"));
 
             File file = fileChooser.showOpenDialog(null);
             if (file != null) {
@@ -106,16 +112,66 @@ public class FXMLController implements Initializable {
             cow = savePixelsInHashMap(crop);
         });
         buttonSelectStart.setOnMouseClicked((event) -> {
-            if (pasture == null || cow == null || pasture.size() == 1 || cow.size() == 1) {
-                return;
-            }
-            
-            try {
+
+         /*   File f = new File("cow1.txt"); //pega do arquivo e passa na imagem retirando cores
+            try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+
+                String sCurrentLine;
+
+                while ((sCurrentLine = br.readLine()) != null) {
+                    cow.put(Integer.valueOf(sCurrentLine), Integer.valueOf(sCurrentLine));
+                }
+
+                pasture.forEach((t, u) -> {
+                    if (cow.get(u) != null) {
+                        cow.remove(u);
+                    }
+                });
+                File fi = new File("cow2.txt");
+                fi.createNewFile();
+                final PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(fi, true)));
+                cow.forEach((t, u) -> {
+                    out.println(cow.get(u));
+                });
+            } catch (IOException e) {
+            }*/
+
+              File f = new File("cow2.txt"); //pega do arquivo e passa na imagem retirando cores
+            try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+
+                String sCurrentLine;
+
+                while ((sCurrentLine = br.readLine()) != null) {
+                    cow.put(Integer.valueOf(sCurrentLine), Integer.valueOf(sCurrentLine));
+                }
                 replacePixels(bufferedImage);
-            } catch (IOException ex) {
-                Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
+ /*   try {  // salva as cores da vaca em um arquvio
+                   File f = new File("test.txt");
+                    f.createNewFile();
+                    final PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(f, true)));                    
+                    if (pasture == null || cow == null || pasture.size() == 1 || cow.size() == 1) {
+                        return;
+                    }
+                    pasture.forEach((t, u) -> {
+                        if(cow.get(u)!= null)cow.remove(u);
+                    });
+                   cow.forEach((t,u)->{
+                        out.println(cow.get(u));
+                    });
+                   out.close();
+                    try {
+                        replacePixels(bufferedImage);
+                    } catch (IOException ex) {
+                        Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+                } */
         });
 
     }
@@ -124,17 +180,16 @@ public class FXMLController implements Initializable {
 
         int w = crop.getWidth();
         int h = crop.getHeight();
-  
+
         BufferedImage writableImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 
-         for (int col = 0; col < w; col++) {
+        for (int col = 0; col < w; col++) {
             for (int lin = 0; lin < h; lin++) {
                 int pixel = crop.getRGB(col, lin);
-                if (pasture.get(pixel) != null) {
-                    writableImage.setRGB(col, lin, -1);                 
-                }
-                else{
-                writableImage.setRGB(col, lin, pixel);
+                if (cow.get(pixel) != null) {
+                    writableImage.setRGB(col, lin, pixel);
+                } else {
+                    writableImage.setRGB(col, lin, -1);
                 }
             }
         }
@@ -149,9 +204,9 @@ public class FXMLController implements Initializable {
 
     public Map<Integer, Integer> savePixelsInHashMap(BufferedImage crop) {
         Map<Integer, Integer> map = new HashMap<>();
-int w = crop.getWidth();
+        int w = crop.getWidth();
         int h = crop.getHeight();
-          for (int col = 0; col < w; col++) {
+        for (int col = 0; col < w; col++) {
             for (int lin = 0; lin < h; lin++) {
                 int pixel = crop.getRGB(col, lin);
                 map.put(pixel, pixel);
@@ -273,16 +328,6 @@ int w = crop.getWidth();
         WritableImage wi = new WritableImage(width, height);
         imageView.snapshot(parameters, wi);
 
-        // save image 
-        // !!! has bug because of transparency (use approach below) !!!
-        // --------------------------------
-//        try {
-//          ImageIO.write(SwingFXUtils.fromFXImage( wi, null), "jpg", file);
-//      } catch (IOException e) {
-//          e.printStackTrace();
-//      }
-        // save image (without alpha)
-        // --------------------------------
         BufferedImage bufImageARGB = SwingFXUtils.fromFXImage(wi, null);
         BufferedImage bufImageRGB = new BufferedImage(bufImageARGB.getWidth(), bufImageARGB.getHeight(), BufferedImage.OPAQUE);
 
