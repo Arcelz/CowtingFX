@@ -19,6 +19,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -51,292 +52,286 @@ import javax.imageio.ImageIO;
  */
 public class FXMLController implements Initializable {
 
-    @FXML
-    private JFXButton buttonSelectImage;
+	@FXML
+	private JFXButton buttonSelectImage;
 
-    @FXML
-    private BorderPane borderPane;
+	@FXML
+	private BorderPane borderPane;
 
-    @FXML
-    private ImageView imageView;
+	@FXML
+	private ImageView imageView;
 
-    @FXML
-    private Group group;
+	@FXML
+	private Group group;
 
-    @FXML
-    private JFXButton buttonSelectPasture;
+	@FXML
+	private JFXButton buttonSelectPasture;
 
-    @FXML
-    private JFXButton buttonSelectCow;
+	@FXML
+	private JFXButton buttonSelectCow;
 
-    @FXML
-    private JFXButton buttonSelectStart;
+	@FXML
+	private JFXButton buttonSelectStart;
 
-    private RubberBandSelection rubberBandSelection;
-    private Map<Integer, Integer> cow = new HashMap<>();
-    private Map<Integer, Integer> pasture = new HashMap<>();
-    private Image image;
-    private BufferedImage bufferedImage;
+	private RubberBandSelection rubberBandSelection;
+	private Map<Integer, Integer> cow = new HashMap<>();
+	private Map<Integer, Integer> pasture = new HashMap<>();
+	private Image image;
+	private BufferedImage bufferedImage;
 
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        buttonSelectImage.setOnAction((final ActionEvent e) -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("JPG", "*.JPG"), new FileChooser.ExtensionFilter("PNG", "*.png"));
+	@Override
+	public void initialize(URL url, ResourceBundle rb) {
+		buttonSelectImage.setOnAction((final ActionEvent e) -> {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("JPG", "*.JPG"),
+					new FileChooser.ExtensionFilter("PNG", "*.png"));
 
-            File file = fileChooser.showOpenDialog(null);
-            if (file != null) {
-                try {
-                    bufferedImage = ImageIO.read(file);
-                    image = SwingFXUtils.toFXImage(bufferedImage, null);
-                    imageView.setImage(image);
-                    imageView.setFitWidth(image.getWidth());
-                    imageView.setFitHeight(image.getHeight());
-                } catch (IOException ex) {
-                    Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-        rubberBandSelection = new RubberBandSelection(group);
-        buttonSelectPasture.setOnMouseClicked((event) -> {
-            Bounds selectionBounds = rubberBandSelection.getBounds();
-            BufferedImage crop = crop(selectionBounds);
-            rubberBandSelection.removeRetangle();
-            pasture = savePixelsInHashMap(crop);
+			File file = fileChooser.showOpenDialog(null);
+			if (file != null) {
+				try {
+					bufferedImage = ImageIO.read(file);
+					image = SwingFXUtils.toFXImage(bufferedImage, null);
+					imageView.setImage(image);
+					imageView.setFitWidth(image.getWidth());
+					imageView.setFitHeight(image.getHeight());
+				} catch (IOException ex) {
+					Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+				}
+			}
+		});
+		rubberBandSelection = new RubberBandSelection(group);
+		buttonSelectPasture.setOnMouseClicked((event) -> {
+			Bounds selectionBounds = rubberBandSelection.getBounds();
+			BufferedImage crop = crop(selectionBounds);
+			rubberBandSelection.removeRetangle();
+			pasture = savePixelsInHashMap(crop);
 
-        });
-        buttonSelectCow.setOnMouseClicked((event) -> {
-            Bounds selectionBounds = rubberBandSelection.getBounds();
-            BufferedImage crop = crop(selectionBounds);
-            rubberBandSelection.removeRetangle();
-            cow = savePixelsInHashMap(crop);
-        });
-        buttonSelectStart.setOnMouseClicked((event) -> {
+		});
+		buttonSelectCow.setOnMouseClicked((event) -> {
+			Bounds selectionBounds = rubberBandSelection.getBounds();
+			BufferedImage crop = crop(selectionBounds);
+			rubberBandSelection.removeRetangle();
+			cow = savePixelsInHashMap(crop);
+		});
+		buttonSelectStart.setOnMouseClicked((event) -> {
 
-         /*   File f = new File("cow1.txt"); //pega do arquivo e passa na imagem retirando cores
-            try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+			/*
+			 * File f = new File("cow1.txt"); //pega do arquivo e passa na imagem retirando
+			 * cores try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+			 * 
+			 * String sCurrentLine;
+			 * 
+			 * while ((sCurrentLine = br.readLine()) != null) {
+			 * cow.put(Integer.valueOf(sCurrentLine), Integer.valueOf(sCurrentLine)); }
+			 * 
+			 * pasture.forEach((t, u) -> { if (cow.get(u) != null) { cow.remove(u); } });
+			 * File fi = new File("cow2.txt"); fi.createNewFile(); final PrintWriter out =
+			 * new PrintWriter(new BufferedWriter(new FileWriter(fi, true)));
+			 * cow.forEach((t, u) -> { out.println(cow.get(u)); }); } catch (IOException e)
+			 * { }
+			 */
 
-                String sCurrentLine;
+			File f = new File("cow2.txt"); // pega do arquivo e passa na imagem retirando cores
+			try (BufferedReader br = new BufferedReader(new FileReader(f))) {
 
-                while ((sCurrentLine = br.readLine()) != null) {
-                    cow.put(Integer.valueOf(sCurrentLine), Integer.valueOf(sCurrentLine));
-                }
+				String sCurrentLine;
 
-                pasture.forEach((t, u) -> {
-                    if (cow.get(u) != null) {
-                        cow.remove(u);
-                    }
-                });
-                File fi = new File("cow2.txt");
-                fi.createNewFile();
-                final PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(fi, true)));
-                cow.forEach((t, u) -> {
-                    out.println(cow.get(u));
-                });
-            } catch (IOException e) {
-            }*/
+				while ((sCurrentLine = br.readLine()) != null) {
+					cow.put(Integer.valueOf(sCurrentLine), Integer.valueOf(sCurrentLine));
+				}
+				replacePixels(bufferedImage);
 
-              File f = new File("cow2.txt"); //pega do arquivo e passa na imagem retirando cores
-            try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
-                String sCurrentLine;
+			/*
+			 * try { // salva as cores da vaca em um arquvio File f = new File("test.txt");
+			 * f.createNewFile(); final PrintWriter out = new PrintWriter(new
+			 * BufferedWriter(new FileWriter(f, true))); if (pasture == null || cow == null
+			 * || pasture.size() == 1 || cow.size() == 1) { return; } pasture.forEach((t, u)
+			 * -> { if(cow.get(u)!= null)cow.remove(u); }); cow.forEach((t,u)->{
+			 * out.println(cow.get(u)); }); out.close(); try { replacePixels(bufferedImage);
+			 * } catch (IOException ex) {
+			 * Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+			 * } } catch (IOException ex) {
+			 * Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+			 * }
+			 */
+		});
 
-                while ((sCurrentLine = br.readLine()) != null) {
-                    cow.put(Integer.valueOf(sCurrentLine), Integer.valueOf(sCurrentLine));
-                }
-                replacePixels(bufferedImage);
+	}
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+	public BufferedImage replacePixels(BufferedImage crop) throws IOException {
 
- /*   try {  // salva as cores da vaca em um arquvio
-                   File f = new File("test.txt");
-                    f.createNewFile();
-                    final PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(f, true)));                    
-                    if (pasture == null || cow == null || pasture.size() == 1 || cow.size() == 1) {
-                        return;
-                    }
-                    pasture.forEach((t, u) -> {
-                        if(cow.get(u)!= null)cow.remove(u);
-                    });
-                   cow.forEach((t,u)->{
-                        out.println(cow.get(u));
-                    });
-                   out.close();
-                    try {
-                        replacePixels(bufferedImage);
-                    } catch (IOException ex) {
-                        Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
-                } */
-        });
+		int w = crop.getWidth();
+		int h = crop.getHeight();
 
-    }
+		BufferedImage writableImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 
-    public BufferedImage replacePixels(BufferedImage crop) throws IOException {
+		for (int col = 0; col < w; col++) {
+			LinkedHashMap<Integer, Boolean> lineColor = new LinkedHashMap<>();
+			for (int lin = 0; lin < h; lin++) {
+				int pixel = crop.getRGB(col, lin);
+				if (cow.get(pixel) != null) {
+					writableImage.setRGB(col, lin, -16777216);
+					lineColor.put(lin, true);
+				} else {
+					writableImage.setRGB(col, lin, -1);
+					lineColor.put(lin, false);
+				}
+			}
+			int size = lineColor.size();
+			for (int i = 0; i < size; i++) {// criar um for aki dentro que ira pega um range de pixels e verificar uma
+											// distancia similar se nao tiver trocar para branco
+				System.out.println(lineColor.get(i));
+			}
+		}
 
-        int w = crop.getWidth();
-        int h = crop.getHeight();
+		image = SwingFXUtils.toFXImage(writableImage, null);
+		imageView.setImage(image);
+		imageView.setFitWidth(image.getWidth());
+		imageView.setFitHeight(image.getHeight());
 
-        BufferedImage writableImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+		return crop;
+	}
 
-        for (int col = 0; col < w; col++) {
-            for (int lin = 0; lin < h; lin++) {
-                int pixel = crop.getRGB(col, lin);
-                if (cow.get(pixel) != null) {
-                    writableImage.setRGB(col, lin, pixel);
-                } else {
-                    writableImage.setRGB(col, lin, -1);
-                }
-            }
-        }
+	public Map<Integer, Integer> savePixelsInHashMap(BufferedImage crop) {
+		Map<Integer, Integer> map = new HashMap<>();
+		int w = crop.getWidth();
+		int h = crop.getHeight();
+		for (int col = 0; col < w; col++) {
+			for (int lin = 0; lin < h; lin++) {
+				int pixel = crop.getRGB(col, lin);
+				map.put(pixel, pixel);
+			}
+		}
+		return map;
+	}
 
-        image = SwingFXUtils.toFXImage(writableImage, null);
-        imageView.setImage(image);
-        imageView.setFitWidth(image.getWidth());
-        imageView.setFitHeight(image.getHeight());
+	public static class RubberBandSelection {
 
-        return crop;
-    }
+		final DragContext dragContext = new DragContext();
+		Rectangle rect = new Rectangle();
 
-    public Map<Integer, Integer> savePixelsInHashMap(BufferedImage crop) {
-        Map<Integer, Integer> map = new HashMap<>();
-        int w = crop.getWidth();
-        int h = crop.getHeight();
-        for (int col = 0; col < w; col++) {
-            for (int lin = 0; lin < h; lin++) {
-                int pixel = crop.getRGB(col, lin);
-                map.put(pixel, pixel);
-            }
-        }
-        return map;
-    }
+		Group group;
 
-    public static class RubberBandSelection {
+		public Bounds getBounds() {
+			return rect.getBoundsInParent();
+		}
 
-        final DragContext dragContext = new DragContext();
-        Rectangle rect = new Rectangle();
+		public RubberBandSelection(Group group) {
 
-        Group group;
+			this.group = group;
 
-        public Bounds getBounds() {
-            return rect.getBoundsInParent();
-        }
+			rect = new Rectangle(0, 0, 0, 0);
+			rect.setStroke(Color.BLUE);
+			rect.setStrokeWidth(1);
+			rect.setStrokeLineCap(StrokeLineCap.ROUND);
+			rect.setFill(Color.LIGHTBLUE.deriveColor(0, 1.2, 1, 0.6));
 
-        public RubberBandSelection(Group group) {
+			group.addEventHandler(MouseEvent.MOUSE_PRESSED, onMousePressedEventHandler);
+			group.addEventHandler(MouseEvent.MOUSE_DRAGGED, onMouseDraggedEventHandler);
 
-            this.group = group;
+		}
 
-            rect = new Rectangle(0, 0, 0, 0);
-            rect.setStroke(Color.BLUE);
-            rect.setStrokeWidth(1);
-            rect.setStrokeLineCap(StrokeLineCap.ROUND);
-            rect.setFill(Color.LIGHTBLUE.deriveColor(0, 1.2, 1, 0.6));
+		EventHandler<MouseEvent> onMousePressedEventHandler = new EventHandler<MouseEvent>() {
 
-            group.addEventHandler(MouseEvent.MOUSE_PRESSED, onMousePressedEventHandler);
-            group.addEventHandler(MouseEvent.MOUSE_DRAGGED, onMouseDraggedEventHandler);
+			@Override
+			public void handle(MouseEvent event) {
 
-        }
+				if (event.isSecondaryButtonDown()) {
+					return;
+				}
 
-        EventHandler<MouseEvent> onMousePressedEventHandler = new EventHandler<MouseEvent>() {
+				// remove old rect
+				rect.setX(0);
+				rect.setY(0);
+				rect.setWidth(0);
+				rect.setHeight(0);
 
-            @Override
-            public void handle(MouseEvent event) {
+				group.getChildren().remove(rect);
 
-                if (event.isSecondaryButtonDown()) {
-                    return;
-                }
+				// prepare new drag operation
+				dragContext.mouseAnchorX = event.getX();
+				dragContext.mouseAnchorY = event.getY();
 
-                // remove old rect
-                rect.setX(0);
-                rect.setY(0);
-                rect.setWidth(0);
-                rect.setHeight(0);
+				rect.setX(dragContext.mouseAnchorX);
+				rect.setY(dragContext.mouseAnchorY);
+				rect.setWidth(0);
+				rect.setHeight(0);
 
-                group.getChildren().remove(rect);
+				group.getChildren().add(rect);
 
-                // prepare new drag operation
-                dragContext.mouseAnchorX = event.getX();
-                dragContext.mouseAnchorY = event.getY();
+			}
+		};
 
-                rect.setX(dragContext.mouseAnchorX);
-                rect.setY(dragContext.mouseAnchorY);
-                rect.setWidth(0);
-                rect.setHeight(0);
+		EventHandler<MouseEvent> onMouseDraggedEventHandler = new EventHandler<MouseEvent>() {
 
-                group.getChildren().add(rect);
+			@Override
+			public void handle(MouseEvent event) {
 
-            }
-        };
+				if (event.isSecondaryButtonDown()) {
+					return;
+				}
 
-        EventHandler<MouseEvent> onMouseDraggedEventHandler = new EventHandler<MouseEvent>() {
+				double offsetX = event.getX() - dragContext.mouseAnchorX;
+				double offsetY = event.getY() - dragContext.mouseAnchorY;
 
-            @Override
-            public void handle(MouseEvent event) {
+				if (offsetX > 0) {
+					rect.setWidth(offsetX);
+				} else {
+					rect.setX(event.getX());
+					rect.setWidth(dragContext.mouseAnchorX - rect.getX());
+				}
 
-                if (event.isSecondaryButtonDown()) {
-                    return;
-                }
+				if (offsetY > 0) {
+					rect.setHeight(offsetY);
+				} else {
+					rect.setY(event.getY());
+					rect.setHeight(dragContext.mouseAnchorY - rect.getY());
+				}
+			}
+		};
 
-                double offsetX = event.getX() - dragContext.mouseAnchorX;
-                double offsetY = event.getY() - dragContext.mouseAnchorY;
+		private void removeRetangle() {
+			rect.setX(0);
+			rect.setY(0);
+			rect.setWidth(0);
+			rect.setHeight(0);
+			group.getChildren().remove(rect);
+		}
 
-                if (offsetX > 0) {
-                    rect.setWidth(offsetX);
-                } else {
-                    rect.setX(event.getX());
-                    rect.setWidth(dragContext.mouseAnchorX - rect.getX());
-                }
+		private static final class DragContext {
 
-                if (offsetY > 0) {
-                    rect.setHeight(offsetY);
-                } else {
-                    rect.setY(event.getY());
-                    rect.setHeight(dragContext.mouseAnchorY - rect.getY());
-                }
-            }
-        };
+			public double mouseAnchorX;
+			public double mouseAnchorY;
 
-        private void removeRetangle() {
-            rect.setX(0);
-            rect.setY(0);
-            rect.setWidth(0);
-            rect.setHeight(0);
-            group.getChildren().remove(rect);
-        }
+		}
+	}
 
-        private static final class DragContext {
+	private BufferedImage crop(Bounds bounds) {
 
-            public double mouseAnchorX;
-            public double mouseAnchorY;
+		int width = (int) bounds.getWidth();
+		int height = (int) bounds.getHeight();
 
-        }
-    }
+		SnapshotParameters parameters = new SnapshotParameters();
+		parameters.setFill(Color.TRANSPARENT);
+		parameters.setViewport(new Rectangle2D(bounds.getMinX(), bounds.getMinY(), width, height));
 
-    private BufferedImage crop(Bounds bounds) {
+		WritableImage wi = new WritableImage(width, height);
+		imageView.snapshot(parameters, wi);
 
-        int width = (int) bounds.getWidth();
-        int height = (int) bounds.getHeight();
+		BufferedImage bufImageARGB = SwingFXUtils.fromFXImage(wi, null);
+		BufferedImage bufImageRGB = new BufferedImage(bufImageARGB.getWidth(), bufImageARGB.getHeight(),
+				BufferedImage.OPAQUE);
 
-        SnapshotParameters parameters = new SnapshotParameters();
-        parameters.setFill(Color.TRANSPARENT);
-        parameters.setViewport(new Rectangle2D(bounds.getMinX(), bounds.getMinY(), width, height));
+		Graphics2D graphics = bufImageRGB.createGraphics();
+		graphics.drawImage(bufImageARGB, 0, 0, null);
 
-        WritableImage wi = new WritableImage(width, height);
-        imageView.snapshot(parameters, wi);
+		graphics.dispose();
 
-        BufferedImage bufImageARGB = SwingFXUtils.fromFXImage(wi, null);
-        BufferedImage bufImageRGB = new BufferedImage(bufImageARGB.getWidth(), bufImageARGB.getHeight(), BufferedImage.OPAQUE);
-
-        Graphics2D graphics = bufImageRGB.createGraphics();
-        graphics.drawImage(bufImageARGB, 0, 0, null);
-
-        graphics.dispose();
-
-        return bufImageRGB;
-    }
+		return bufImageRGB;
+	}
 
 }
