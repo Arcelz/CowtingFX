@@ -166,27 +166,28 @@ public class FXMLController implements Initializable {
 
 		int w = crop.getWidth();
 		int h = crop.getHeight();
-
+		File f = new File("matriz.txt");
+		f.createNewFile();
+		final BufferedWriter out = new BufferedWriter(new FileWriter(f, true));
 		BufferedImage writableImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-
-		for (int col = 0; col < w; col++) {
-			LinkedHashMap<Integer, Boolean> lineColor = new LinkedHashMap<>();
-			for (int lin = 0; lin < h; lin++) {
+		boolean[][] matriz = new boolean[h][w];
+		for (int lin = 0; lin < h; lin++) {
+			for (int col = 0; col < w; col++) {
 				int pixel = crop.getRGB(col, lin);
 				if (cow.get(pixel) != null) {
 					writableImage.setRGB(col, lin, -16777216);
-					lineColor.put(lin, true);
+					matriz[lin][col] = true;
+					out.write(String.valueOf("1"));
+
 				} else {
 					writableImage.setRGB(col, lin, -1);
-					lineColor.put(lin, false);
+					matriz[lin][col] = false;
+					out.write(String.valueOf("0"));
 				}
 			}
-			int size = lineColor.size();
-			for (int i = 0; i < size; i++) {// criar um for aki dentro que ira pega um range de pixels e verificar uma
-											// distancia similar se nao tiver trocar para branco
-				System.out.println(lineColor.get(i));
-			}
+			out.newLine();
 		}
+		out.close();
 
 		image = SwingFXUtils.toFXImage(writableImage, null);
 		imageView.setImage(image);
