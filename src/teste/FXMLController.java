@@ -5,37 +5,45 @@
  */
 package teste;
 
-import com.jfoenix.controls.JFXButton;
+import java.awt.Event;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.imageio.ImageIO;
+
+import com.jfoenix.controls.JFXButton;
+
+import ij.IJ;
+import ij.ImagePlus;
+import ij.Prefs;
+import ij.measure.ResultsTable;
+import ij.plugin.filter.ParticleAnalyzer;
+import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
-
 import javafx.fxml.Initializable;
 import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
+import javafx.scene.ImageCursor;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -43,7 +51,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.stage.FileChooser;
-import javax.imageio.ImageIO;
 
 /**
  * FXML Controller class
@@ -78,6 +85,9 @@ public class FXMLController implements Initializable {
 	private Map<Integer, Integer> pasture = new HashMap<>();
 	private Image image;
 	private BufferedImage bufferedImage;
+	private boolean veri = true;
+	private Thread thread;
+	Runnable runnable;
 
 	@Override
 	public void initialize(URL url, ResourceBundle rb) {
@@ -99,20 +109,38 @@ public class FXMLController implements Initializable {
 				}
 			}
 		});
-		rubberBandSelection = new RubberBandSelection(group);
+		/*
+		 * buttonSelectPasture.setOnMouseClicked((event) -> { Bounds selectionBounds =
+		 * rubberBandSelection.getBounds(); BufferedImage crop = crop(selectionBounds);
+		 * rubberBandSelection.removeRetangle(); pasture = savePixelsInHashMap(crop);
+		 * 
+		 * });
+		 */
+
 		buttonSelectPasture.setOnMouseClicked((event) -> {
-			Bounds selectionBounds = rubberBandSelection.getBounds();
-			BufferedImage crop = crop(selectionBounds);
-			rubberBandSelection.removeRetangle();
-			pasture = savePixelsInHashMap(crop);
+			Image imageCursor = new Image(getClass().getResourceAsStream("square.png")); // pass in the image path
+
+			ImageCursor imageCursor2 = new ImageCursor(imageCursor, -100, -100);
+			group.setCursor(imageCursor2);
+			group.setOnMousePressed((event1) -> {
+				veri = true;
+				erasePixels(event1);
+				thread.start();
+			});
+			group.setOnMouseReleased((event1) -> {
+				veri = false;
+				thread.interrupt();
+			});
 
 		});
 		buttonSelectCow.setOnMouseClicked((event) -> {
+			rubberBandSelection = new RubberBandSelection(group);
 			Bounds selectionBounds = rubberBandSelection.getBounds();
 			BufferedImage crop = crop(selectionBounds);
 			rubberBandSelection.removeRetangle();
 			cow = savePixelsInHashMap(crop);
 		});
+		buttonSelectCow.setDisable(true);
 		buttonSelectStart.setOnMouseClicked((event) -> {
 
 			/*
@@ -139,7 +167,7 @@ public class FXMLController implements Initializable {
 				while ((sCurrentLine = br.readLine()) != null) {
 					cow.put(Integer.valueOf(sCurrentLine), Integer.valueOf(sCurrentLine));
 				}
-				replacePixels(bufferedImage);
+				replacePixels(SwingFXUtils.fromFXImage(imageView.getImage(), null));
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -162,13 +190,39 @@ public class FXMLController implements Initializable {
 
 	}
 
+	private void erasePixels(MouseEvent event) {
+		thread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				runnable = new Runnable() {
+					@Override
+					public void run() {
+						int ct = 200; // tamanho da borracha
+						Double x = event.getX();
+						Double y = event.getY();
+						BufferedImage fromFXImage = SwingFXUtils.fromFXImage(imageView.getImage(), null);
+						for (int i = 0; i < ct; i++) {
+							fromFXImage.setRGB(x.intValue() + i, y.intValue(), -1);
+							for (int j = 0; j < ct; j++) {
+								fromFXImage.setRGB(x.intValue() + i, y.intValue() + j, -1);
+							}
+						}
+						image = SwingFXUtils.toFXImage(fromFXImage, null);
+						imageView.setImage(image);
+						imageView.setFitWidth(image.getWidth());
+						imageView.setFitHeight(image.getHeight());
+
+					}
+				};
+				Platform.runLater(runnable);
+			}
+		});
+	}
+
 	public BufferedImage replacePixels(BufferedImage crop) throws IOException {
 
 		int w = crop.getWidth();
 		int h = crop.getHeight();
-		File f = new File("matriz.txt");
-		f.createNewFile();
-		final BufferedWriter out = new BufferedWriter(new FileWriter(f, true));
 		BufferedImage writableImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 		boolean[][] matriz = new boolean[h][w];
 		for (int lin = 0; lin < h; lin++) {
@@ -177,23 +231,41 @@ public class FXMLController implements Initializable {
 				if (cow.get(pixel) != null) {
 					writableImage.setRGB(col, lin, -16777216);
 					matriz[lin][col] = true;
-					out.write(String.valueOf("1"));
-
 				} else {
 					writableImage.setRGB(col, lin, -1);
 					matriz[lin][col] = false;
-					out.write(String.valueOf("0"));
 				}
 			}
-			out.newLine();
 		}
-		out.close();
+
+		// ImageJ fazendo o tratamento da img
+		ImagePlus binaerpic = new ImagePlus();
+		binaerpic.setImage(writableImage);
+		binaerpic.unlock();
+		binaerpic.setProcessor(binaerpic.getTitle(), binaerpic.getProcessor().convertToByte(false));
+		ParticleAnalyzer pa = new ParticleAnalyzer(ParticleAnalyzer.SHOW_OUTLINES, 0, null, 1600, 50000);
+		Prefs.blackBackground = false;
+		pa.analyze(binaerpic);
+		pa.setHideOutputImage(true);
+		writableImage = pa.getOutputImage().getBufferedImage();
 
 		image = SwingFXUtils.toFXImage(writableImage, null);
 		imageView.setImage(image);
 		imageView.setFitWidth(image.getWidth());
 		imageView.setFitHeight(image.getHeight());
+		File outputfile = new File("image.jpg");
+		ImageIO.write(writableImage, "jpg", outputfile);
+		// quantidade de pixels pretos encontrados apos o imagej tratar a img
+		int pix = 0;
+		for (int lin = 0; lin < h; lin++) {
+			for (int col = 0; col < w; col++) {
+				int pixel = writableImage.getRGB(col, lin);
+				if (pixel != -1)
+					pix++;
 
+			}
+		}
+		System.out.println(pix / 1750);
 		return crop;
 	}
 
